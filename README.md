@@ -47,6 +47,16 @@ Everything executes 100% locally in your browser—completely offline with zero 
 
 ---
 
+## Getting Started
+
+Because SpeedReader Pro is built as a single, self-contained file, setup takes seconds:
+
+### Try It Live (AUTO RECOMMENDED)
+
+**[Launch SpeedReader Pro on GitHub Pages](https://dallascourchene-commits.github.io/SpeedReaderPro/)** — no download or installation required.
+
+---
+
 ## Key Features
 
 - **🚀 Ultra-High Velocity:** Adjustable speed scaling in real time from **100 WPM** to **2,000 WPM**.
@@ -114,14 +124,6 @@ SpeedReader Pro processes all documents client-side:
 - **Rich/Word Documents** (`.doc`, `.docx` plain-text buffers)
 
 ---
-
-## Getting Started
-
-Because SpeedReader Pro is built as a single, self-contained file, setup takes seconds:
-
-### Try It Live
-
-**[Launch SpeedReader Pro on GitHub Pages](https://dallascourchene-commits.github.io/SpeedReaderPro/)** — no download or installation required.
 
 ### Quick Run
 1. Download or clone this repository:
