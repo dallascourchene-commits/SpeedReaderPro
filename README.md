@@ -1,16 +1,18 @@
 # SpeedReader Pro ⚡
 
-**Powered by AuraOS, backed by Paper X.**
+**Powered by Aura OS, backed by Paper X.**
 
 [![Aura OS: Paper X](https://img.shields.io/badge/Aura%20OS-Paper%20X-indigo.svg)](https://zenodo.org/records/22177051)
 [![Zenodo DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22177051-blue.svg)](https://zenodo.org/records/22177051)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-SpeedReaderPro-slate.svg?logo=github)](https://github.com/dallascourchene-commits/SpeedReaderPro)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-2ea44f.svg)](https://dallascourchene-commits.github.io/SpeedReaderPro/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
 [![Offline Capable](https://img.shields.io/badge/Offline-100%25%20Client--Side-teal.svg)](#privacy--offline-first)
 [![Speed](https://img.shields.io/badge/WPM-Up%20to%202%2C000-violet.svg)](#high-velocity-engine)
 
 **SpeedReader Pro** is a zero-latency, high-velocity RSVP (Rapid Serial Visual Presentation) reading engine published as **SpeedReader Pro of AuraOS**. Engineered for peak visual comprehension, it combines **flush-left optical anchoring**, **uppercase Bionic typography**, and **discrete zero-bounce container stabilization** to allow distraction-free reading speeds up to **2,000 words per minute (WPM)**.
 
+**Live Web App:** [Launch SpeedReader Pro](https://dallascourchene-commits.github.io/SpeedReaderPro/) — use it instantly in your browser, no install required.  
 Official Repository: [https://github.com/dallascourchene-commits/SpeedReaderPro](https://github.com/dallascourchene-commits/SpeedReaderPro)  
 Archival Record & Paper X: [https://zenodo.org/records/22177051](https://zenodo.org/records/22177051)
 
@@ -116,6 +118,10 @@ SpeedReader Pro processes all documents client-side:
 ## Getting Started
 
 Because SpeedReader Pro is built as a single, self-contained file, setup takes seconds:
+
+### Try It Live
+
+**[Launch SpeedReader Pro on GitHub Pages](https://dallascourchene-commits.github.io/SpeedReaderPro/)** — no download or installation required.
 
 ### Quick Run
 1. Download or clone this repository:
