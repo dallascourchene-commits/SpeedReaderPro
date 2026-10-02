@@ -1,6 +1,6 @@
 # SpeedReader Pro ⚡
 
-**Powered by Aura OS, backed by Paper X.**
+**Powered by AuraOS, backed by Paper X.**
 
 [![Aura OS: Paper X](https://img.shields.io/badge/Aura%20OS-Paper%20X-indigo.svg)](https://zenodo.org/records/22177051)
 [![Zenodo DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22177051-blue.svg)](https://zenodo.org/records/22177051)
@@ -9,7 +9,7 @@
 [![Offline Capable](https://img.shields.io/badge/Offline-100%25%20Client--Side-teal.svg)](#privacy--offline-first)
 [![Speed](https://img.shields.io/badge/WPM-Up%20to%202%2C000-violet.svg)](#high-velocity-engine)
 
-**SpeedReader Pro** is a zero-latency, high-velocity RSVP (Rapid Serial Visual Presentation) reading engine published as **SpeedReader Pro of Aura OS**. Engineered for peak visual comprehension, it combines **flush-left optical anchoring**, **uppercase Bionic typography**, and **discrete zero-bounce container stabilization** to allow distraction-free reading speeds up to **2,000 words per minute (WPM)**.
+**SpeedReader Pro** is a zero-latency, high-velocity RSVP (Rapid Serial Visual Presentation) reading engine published as **SpeedReader Pro of AuraOS**. Engineered for peak visual comprehension, it combines **flush-left optical anchoring**, **uppercase Bionic typography**, and **discrete zero-bounce container stabilization** to allow distraction-free reading speeds up to **2,000 words per minute (WPM)**.
 
 Official Repository: [https://github.com/dallascourchene-commits/SpeedReaderPro](https://github.com/dallascourchene-commits/SpeedReaderPro)  
 Archival Record & Paper X: [https://zenodo.org/records/22177051](https://zenodo.org/records/22177051)
@@ -142,7 +142,7 @@ SpeedReader Pro is indexed and permanently archived as **Paper X of Aura OS** on
 
 ```bibtex
 @software{speedreader_pro_paper_x_auraos,
-  author       = {{Aura OS} and Courchene, Dallas},
+  author       = {{AuraOS} and Courchene, Dallas},
   title        = {SpeedReader Pro: High-Velocity RSVP Reader with Uppercase Bionic Anchors and Flush-Left Fixation (Paper X of Aura OS)},
   year         = {2026},
   publisher    = {Zenodo},
@@ -159,7 +159,7 @@ SpeedReader Pro is indexed and permanently archived as **Paper X of Aura OS** on
 
 ## About Aura OS
 
-SpeedReader Pro was developed under the **Aura OS** initiative—an exploratory human-machine interface framework focusing on high-bandwidth information absorption, recursive cognitive frameworks, and zero-latency human-AI workflows.
+SpeedReader Pro was developed under the **AuraOS** initiative—an exploratory human-machine interface framework focusing on high-bandwidth information absorption, recursive cognitive frameworks, and zero-latency human-AI workflows.
 
 ---
 
