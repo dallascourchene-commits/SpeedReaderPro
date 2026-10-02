@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedReader Pro - High-Velocity RSVP Reader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Strict boundary containment to prevent layout shifts or bouncing */
+        .stable-box {
+            contain: strict;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-base tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">SpeedReader Pro</h1>
+                <p class="text-xs text-slate-400">Flush-Left RSVP &bull; Uppercase Bionic Anchors &bull; Up to 2,000 WPM</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="btn-load-sample" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-2 rounded-lg transition border border-slate-700">
+                Load Sample
+            </button>
+            <label class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3.5 py-2 rounded-lg cursor-pointer transition shadow-md shadow-indigo-600/30 flex items-center space-x-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <span>Upload File</span>
+                <input type="file" id="file-input" class="hidden" accept=".txt,.md,.pdf,.doc,.docx">
+            </label>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col max-w-5xl w-full mx-auto p-3 md:p-6 overflow-hidden">
+        
+        <!-- Document Stats Row -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-3 mb-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="status-dot"></span>
+                <span id="doc-title" class="font-medium text-slate-300 truncate max-w-xs md:max-w-md">Sample loaded. Ready to read.</span>
+            </div>
+            <div class="flex items-center space-x-4 text-xs text-slate-400">
+                <span id="stats-words">0 words</span>
+                <span>&bull;</span>
+                <span id="stats-time">0 min est.</span>
+            </div>
+        </div>
+
+        <!-- Customization Controls Bar -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3 mb-3 flex flex-wrap items-center justify-between gap-4 text-xs">
+            
+            <!-- Anchor Length (Capitals) Toggle -->
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-400 font-medium">Caps:</span>
+                <div class="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800" id="anchor-len-group">
+                    <button class="anchor-btn px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white transition" data-mode="auto" title="Dynamic Bionic % based on word length">Auto</button>
+                    <button class="anchor-btn px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white transition" data-mode="1" title="1 Capital Letter">1</button>
+                    <button class="anchor-btn px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white transition" data-mode="2" title="2 Capital Letters">2</button>
+                    <button class="anchor-btn px-2.5 py-1 rounded-md font-semibold bg-indigo-600 text-white transition" data-mode="3" title="3 Capital Letters">3</button>
+                    <button class="anchor-btn px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white transition" data-mode="4" title="4 Capital Letters">4</button>
+                </div>
+            </div>
+
+            <!-- Base Font Size Slider -->
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-400 font-medium">Base Font:</span>
+                <input type="range" id="font-size-slider" min="32" max="72" step="2" value="48" class="w-24 h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-indigo-500">
+                <span id="font-size-label" class="mono-font text-indigo-400 font-semibold w-9">48px</span>
+            </div>
+
+            <!-- Color Palette Controls -->
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-1.5">
+                    <span class="text-slate-400">Anchor:</span>
+                    <button class="color-btn w-4 h-4 rounded-full bg-white border-2 border-indigo-500" data-type="anchor" data-color="#ffffff" title="White"></button>
+                    <button class="color-btn w-4 h-4 rounded-full bg-yellow-400 border-2 border-transparent" data-type="anchor" data-color="#facc15" title="Yellow"></button>
+                    <button class="color-btn w-4 h-4 rounded-full bg-indigo-400 border-2 border-transparent" data-type="anchor" data-color="#818cf8" title="Indigo"></button>
+                    <button class="color-btn w-4 h-4 rounded-full bg-emerald-400 border-2 border-transparent" data-type="anchor" data-color="#34d399" title="Emerald"></button>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <span class="text-slate-400">Rest:</span>
+                    <button class="color-btn w-4 h-4 rounded-full bg-white border-2 border-transparent" data-type="rest" data-color="#ffffff" title="White"></button>
+                    <button class="color-btn w-4 h-4 rounded-full bg-slate-400 border-2 border-indigo-500" data-type="rest" data-color="#94a3b8" title="Slate"></button>
+                    <button class="color-btn w-4 h-4 rounded-full bg-amber-200 border-2 border-transparent" data-type="rest" data-color="#fef08a" title="Soft Yellow"></button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Main Reading Stage (Stationary & Locked Boundaries) -->
+        <div class="flex-1 bg-slate-900/50 border border-slate-800/80 rounded-2xl flex flex-col items-center justify-center p-4 md:p-6 relative shadow-inner overflow-hidden select-none">
+            
+            <div id="tap-indicator" class="absolute top-4 px-3 py-1 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 rounded-full text-xs font-mono opacity-0 transition-opacity pointer-events-none z-30">
+                Rewound 5 words (-5)
+            </div>
+
+            <!-- Stationary Reading Box Container -->
+            <div id="rsvp-container" class="w-full max-w-2xl bg-slate-900 border border-slate-700/60 rounded-2xl p-6 md:p-10 shadow-2xl relative flex flex-col items-start justify-center min-h-[220px] max-h-[220px] stable-box overflow-hidden">
+                
+                <!-- Vertical Left Guide Indicator -->
+                <div class="absolute left-6 top-4 bottom-4 w-1 bg-indigo-500/80 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.6)]"></div>
+
+                <!-- Word Display Viewport (Left-aligned & Zero Layout Shifts) -->
+                <div class="w-full h-full flex items-center overflow-hidden pl-6">
+                    <div id="rsvp-display" class="mono-font font-bold tracking-tight text-left select-none text-white whitespace-nowrap overflow-hidden">
+                        <span class="text-slate-600">Ready</span>
+                    </div>
+                </div>
+
+                <!-- Preview Context String -->
+                <div id="rsvp-context" class="text-xs text-slate-500 mt-2 h-4 text-left truncate w-full pl-6 pointer-events-none">
+                    Click Play or press Spacebar. Tap stage twice/three times to rewind.
+                </div>
+            </div>
+
+            <!-- Interactive Gesture Overlay -->
+            <div id="stage-overlay" class="absolute inset-0 cursor-pointer z-20" title="Click to play/pause, double tap to rewind 5, triple tap to rewind 15"></div>
+        </div>
+
+        <!-- Bottom Playback & Speed Controls -->
+        <div class="mt-3 bg-slate-900/90 border border-slate-800 rounded-2xl p-3 md:p-4 shadow-lg flex flex-col gap-3">
+            
+            <!-- Progress Scrubbing -->
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between text-xs text-slate-400 font-medium">
+                    <span id="progress-percent">0% Completed</span>
+                    <span id="progress-position">Word 0 of 0</span>
+                </div>
+                <input type="range" id="progress-slider" min="0" max="100" value="0" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button id="btn-rewind" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Rewind 10 words">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.519 4.354a1 1 0 00-1.354-.354l-8 5a1 1 0 000 1.708l8 5a1 1 0 001.354-.354V4.354zM19.519 4.354a1 1 0 00-1.354-.354l-8 5a1 1 0 000 1.708l8 5a1 1 0 001.354-.354V4.354z"></path></svg>
+                    </button>
+                    <button id="btn-play" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/30 transition flex items-center space-x-2">
+                        <svg id="play-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <span id="play-text">Play</span>
+                    </button>
+                    <button id="btn-forward" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Skip forward 10 words">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.481 19.646a1 1 0 001.354.354l8-5a1 1 0 000-1.708l-8-5a1 1 0 00-1.354.354v10.354zM4.481 19.646a1 1 0 001.354.354l8-5a1 1 0 000-1.708l-8-5a1 1 0 00-1.354.354v10.354z"></path></svg>
+                    </button>
+                </div>
+
+                <!-- WPM Slider -->
+                <div class="flex items-center space-x-3 flex-1 max-w-sm">
+                    <div class="flex flex-col">
+                        <span class="text-xs text-slate-400 font-medium">Speed (WPM)</span>
+                        <span id="wpm-display" class="font-bold text-indigo-400 mono-font text-base">400</span>
+                    </div>
+                    <input type="range" id="wpm-slider" min="100" max="2000" step="25" value="400" class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        let words = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let wpm = 400;
+        let timer = null;
+        let lastTapTime = 0;
+        let tapCount = 0;
+
+        let baseFontSize = 48;
+        let anchorMode = '3'; // 'auto', '1', '2', '3', '4'
+        let anchorColor = '#ffffff';
+        let restColor = '#94a3b8';
+
+        const fileInput = document.getElementById('file-input');
+        const btnLoadSample = document.getElementById('btn-load-sample');
+        const docTitle = document.getElementById('doc-title');
+        const statsWords = document.getElementById('stats-words');
+        const statsTime = document.getElementById('stats-time');
+        const rsvpDisplay = document.getElementById('rsvp-display');
+        const rsvpContext = document.getElementById('rsvp-context');
+        const stageOverlay = document.getElementById('stage-overlay');
+        const tapIndicator = document.getElementById('tap-indicator');
+        const progressSlider = document.getElementById('progress-slider');
+        const progressPercent = document.getElementById('progress-percent');
+        const progressPosition = document.getElementById('progress-position');
+        const btnPlay = document.getElementById('btn-play');
+        const playIcon = document.getElementById('play-icon');
+        const playText = document.getElementById('play-text');
+        const btnRewind = document.getElementById('btn-rewind');
+        const btnForward = document.getElementById('btn-forward');
+        const wpmSlider = document.getElementById('wpm-slider');
+        const wpmDisplay = document.getElementById('wpm-display');
+        const fontSizeSlider = document.getElementById('font-size-slider');
+        const fontSizeLabel = document.getElementById('font-size-label');
+        const statusDot = document.getElementById('status-dot');
+        const colorBtns = document.querySelectorAll('.color-btn');
+        const anchorBtns = document.querySelectorAll('.anchor-btn');
+
+        const sampleText = `SpeedReader Pro delivers high-efficiency RSVP reading designed for stationary visual processing. Words remain flush against the guide with uppercase bionic anchor highlighting. Your eyes remain locked at the left boundary while your brain effortlessly absorbs each word. All standard words maintain your uniform chosen font size, while unusually long words instantly snap down to fit within the box boundaries without causing layout expansion or jitter.`;
+
+        function loadText(text, title = "Sample Text Document") {
+            words = text.replace(/\s+/g, ' ').trim().split(' ');
+            currentIndex = 0;
+            docTitle.textContent = title;
+            statsWords.textContent = `${words.length.toLocaleString()} words`;
+            const estMinutes = (words.length / wpm).toFixed(1);
+            statsTime.textContent = `~${estMinutes} min est.`;
+            statusDot.className = "w-2 h-2 rounded-full bg-indigo-500 animate-pulse";
+            updateDisplay();
+            updateProgressUI();
+        }
+
+        loadText(sampleText);
+
+        function getOptimalDelay(word) {
+            let baseDelay = (60 / wpm) * 1000;
+            if (baseDelay < 10) baseDelay = 10;
+
+            if (/[.,;:!?]$/.test(word)) {
+                baseDelay *= 1.3;
+            } else if (word.length > 8) {
+                baseDelay *= 1.1;
+            }
+            return baseDelay;
+        }
+
+        // Fixation Length Calculation (Optimal Recognition Point)
+        function getOptimalAnchorLength(wordLen) {
+            if (wordLen <= 0) return 0;
+            if (anchorMode === 'auto') {
+                if (wordLen <= 2) return 1;
+                if (wordLen <= 5) return 2;
+                if (wordLen <= 8) return 3;
+                return Math.min(4, wordLen);
+            }
+            return Math.min(parseInt(anchorMode, 10), wordLen);
+        }
+
+        // Bionic Formatter: Capitalizes the anchor letters and styles them
+        function formatBionicWord(word) {
+            if (!word) return '';
+            
+            const cleanMatch = word.match(/^([^\w]*)([\w]+)([^\w]*)$/);
+            if (!cleanMatch) return word;
+
+            const prefix = cleanMatch[1];
+            const core = cleanMatch[2];
+            const suffix = cleanMatch[3];
+
+            const anchorLen = getOptimalAnchorLength(core.length);
+            const boldPart = core.substring(0, anchorLen).toUpperCase();
+            const normalPart = core.substring(anchorLen);
+
+            return `${prefix}<strong class="font-extrabold" style="color: ${anchorColor};">${boldPart}</strong><span class="font-normal opacity-90" style="color: ${restColor};">${normalPart}</span>${suffix}`;
+        }
+
+        // Discrete Snap Sizing: Retains chosen baseline font, snapping long words down without layout bounce
+        function updateDisplay() {
+            if (words.length === 0) {
+                rsvpDisplay.innerHTML = '<span class="text-slate-600 text-3xl">No content loaded</span>';
+                rsvpContext.textContent = 'Upload a document or load sample text.';
+                return;
+            }
+
+            if (currentIndex >= words.length) {
+                pauseReading();
+                currentIndex = words.length - 1;
+            }
+
+            const currentWord = words[currentIndex];
+            rsvpDisplay.innerHTML = formatBionicWord(currentWord);
+
+            const charCount = currentWord.length;
+
+            if (charCount > 13) {
+                rsvpDisplay.style.fontSize = `${Math.max(22, Math.floor(baseFontSize * 0.52))}px`;
+            } else if (charCount > 8) {
+                rsvpDisplay.style.fontSize = `${Math.max(26, Math.floor(baseFontSize * 0.72))}px`;
+            } else {
+                rsvpDisplay.style.fontSize = `${baseFontSize}px`;
+            }
+
+            const startCtx = Math.max(0, currentIndex - 4);
+            const endCtx = Math.min(words.length, currentIndex + 5);
+            rsvpContext.textContent = words.slice(startCtx, endCtx).join(' ');
+        }
+
+        function updateProgressUI() {
+            if (words.length === 0) return;
+            const pct = (currentIndex / (words.length - 1)) * 100 || 0;
+            progressSlider.value = pct;
+            progressPercent.textContent = `${Math.round(pct)}% Completed`;
+            progressPosition.textContent = `Word ${currentIndex + 1} of ${words.length}`;
+        }
+
+        function startReading() {
+            if (words.length === 0 || isPlaying) return;
+            isPlaying = true;
+            playText.textContent = 'Pause';
+            playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+            
+            function step() {
+                if (!isPlaying) return;
+                updateDisplay();
+                updateProgressUI();
+                
+                currentIndex++;
+                if (currentIndex < words.length) {
+                    const delay = getOptimalDelay(words[currentIndex]);
+                    if (wpm > 1500 && delay <= 20) {
+                        currentIndex += 1;
+                    }
+                    timer = setTimeout(step, delay);
+                } else {
+                    pauseReading();
+                }
+            }
+            step();
+        }
+
+        function pauseReading() {
+            isPlaying = false;
+            clearTimeout(timer);
+            playText.textContent = 'Play';
+            playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                pauseReading();
+            } else {
+                startReading();
+            }
+        }
+
+        // Anchor letters toggle listeners
+        anchorBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                anchorBtns.forEach(b => {
+                    b.classList.remove('bg-indigo-600', 'text-white');
+                    b.classList.add('text-slate-400');
+                });
+                btn.classList.remove('text-slate-400');
+                btn.classList.add('bg-indigo-600', 'text-white');
+                anchorMode = btn.getAttribute('data-mode');
+                updateDisplay();
+            });
+        });
+
+        // Font size slider listener
+        fontSizeSlider.addEventListener('input', (e) => {
+            baseFontSize = parseInt(e.target.value, 10);
+            fontSizeLabel.textContent = `${baseFontSize}px`;
+            updateDisplay();
+        });
+
+        // Color selection handling
+        colorBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.getAttribute('data-type');
+                const color = btn.getAttribute('data-color');
+
+                document.querySelectorAll(`.color-btn[data-type="${type}"]`).forEach(b => {
+                    b.classList.remove('border-indigo-500');
+                    b.classList.add('border-transparent');
+                });
+                btn.classList.remove('border-transparent');
+                btn.classList.add('border-indigo-500');
+
+                if (type === 'anchor') {
+                    anchorColor = color;
+                } else if (type === 'rest') {
+                    restColor = color;
+                }
+                updateDisplay();
+            });
+        });
+
+        // Document Uploader (PDF, TXT, MD, DOC)
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            pauseReading();
+            docTitle.textContent = `Loading ${file.name}...`;
+
+            const fileName = file.name.toLowerCase();
+
+            if (fileName.endsWith('.pdf')) {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                    const pdfDoc = await loadingTask.promise;
+                    let fullText = '';
+
+                    for (let i = 1; i <= pdfDoc.numPages; i++) {
+                        const page = await pdfDoc.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(' ');
+                        fullText += pageText + ' ';
+                    }
+                    loadText(fullText, file.name);
+                } catch (err) {
+                    console.error(err);
+                    docTitle.textContent = 'Error parsing PDF file.';
+                }
+            } else {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    loadText(event.target.result, file.name);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        btnLoadSample.addEventListener('click', () => {
+            pauseReading();
+            loadText(sampleText, "Sample Text Document");
+        });
+
+        btnPlay.addEventListener('click', togglePlay);
+
+        btnRewind.addEventListener('click', () => {
+            currentIndex = Math.max(0, currentIndex - 10);
+            updateDisplay();
+            updateProgressUI();
+            showTapFeedback('-10 words');
+        });
+
+        btnForward.addEventListener('click', () => {
+            currentIndex = Math.min(words.length - 1, currentIndex + 10);
+            updateDisplay();
+            updateProgressUI();
+            showTapFeedback('+10 words');
+        });
+
+        wpmSlider.addEventListener('input', (e) => {
+            wpm = parseInt(e.target.value, 10);
+            wpmDisplay.textContent = wpm.toLocaleString();
+            if (words.length > 0) {
+                const estMinutes = (words.length / wpm).toFixed(2);
+                statsTime.textContent = `~${estMinutes} min est.`;
+            }
+        });
+
+        progressSlider.addEventListener('input', (e) => {
+            const pct = parseFloat(e.target.value);
+            currentIndex = Math.floor((pct / 100) * (words.length - 1));
+            updateDisplay();
+            updateProgressUI();
+        });
+
+        window.addEventListener('resize', () => {
+            updateDisplay();
+        });
+
+        function showTapFeedback(msg) {
+            tapIndicator.textContent = msg;
+            tapIndicator.style.opacity = '1';
+            setTimeout(() => {
+                tapIndicator.style.opacity = '0';
+            }, 800);
+        }
+
+        // Multi-tap gesture on reading stage
+        stageOverlay.addEventListener('click', () => {
+            const now = Date.now();
+            const diff = now - lastTapTime;
+
+            if (diff < 350) {
+                tapCount++;
+            } else {
+                tapCount = 1;
+            }
+            lastTapTime = now;
+
+            if (tapCount === 2) {
+                currentIndex = Math.max(0, currentIndex - 5);
+                updateDisplay();
+                updateProgressUI();
+                showTapFeedback('Rewound 5 words (-5)');
+                tapCount = 0;
+            } else if (tapCount === 3) {
+                currentIndex = Math.max(0, currentIndex - 15);
+                updateDisplay();
+                updateProgressUI();
+                showTapFeedback('Rewound 15 words (-15)');
+                tapCount = 0;
+            } else {
+                togglePlay();
+            }
+        });
+
+        // Keyboard Controls
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePlay();
+            } else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                currentIndex = Math.max(0, currentIndex - 5);
+                updateDisplay();
+                updateProgressUI();
+                showTapFeedback('-5 words');
+            } else if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                currentIndex = Math.min(words.length - 1, currentIndex + 5);
+                updateDisplay();
+                updateProgressUI();
+                showTapFeedback('+5 words');
+            }
+        });
+    </script>
+</body>
+</html>
